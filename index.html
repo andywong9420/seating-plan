@@ -1,1533 +1,1505 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教室座位表產生器</title>
     <style>
+        :root {
+            --color-primary: #2180 8d;
+            --color-primary-hover: #1d7480;
+            --color-primary-active: #1a6873;
+            --color-success: #32b8c6;
+            --color-error: #c0152f;
+            --color-warning: #a84b2f;
+            --color-bg-primary: #fcfcf9;
+            --color-bg-secondary: #ffffff;
+            --color-text: #134252;
+            --color-text-secondary: #62 6c71;
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-focus-ring: rgba(33, 128, 141, 0.4);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 24px;
+            --radius: 8px;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: var(--font-family);
+            background: var(--color-bg-primary);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+            padding: var(--spacing-lg);
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+        header {
             text-align: center;
+            margin-bottom: var(--spacing-xl);
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: var(--spacing-lg);
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            color: var(--color-primary);
         }
 
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+        h2 {
+            font-size: 18px;
+            margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+            color: var(--color-text);
+            border-left: 4px solid var(--color-primary);
+            padding-left: var(--spacing-md);
         }
 
-        .main-content {
+        .layout {
             display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 0;
-            min-height: 600px;
+            grid-template-columns: 350px 1fr;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
         }
 
-        .sidebar {
-            background: #f8f9fa;
-            padding: 25px;
-            border-right: 1px solid #dee2e6;
+        .panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .control-panel {
+            max-height: 80vh;
             overflow-y: auto;
-            max-height: calc(100vh - 200px);
         }
 
-        .section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .section h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 8px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin: 5px 5px 5px 0;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-small {
-            padding: 5px 12px;
-            font-size: 0.85em;
-        }
-
-        input[type="number"], input[type="text"], select {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            font-size: 0.95em;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
+        .form-group {
+            margin-bottom: var(--spacing-lg);
         }
 
         label {
             display: block;
-            margin-top: 12px;
-            font-weight: 600;
-            color: #495057;
+            font-weight: 500;
+            margin-bottom: var(--spacing-sm);
+            font-size: 14px;
+            color: var(--color-text);
         }
 
-        .workspace {
-            padding: 30px;
-            overflow: auto;
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-family: var(--font-family);
+            font-size: 14px;
+            background: var(--color-bg-primary);
+            color: var(--color-text);
+            transition: border-color 0.2s;
         }
 
-        .view-controls {
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-focus-ring);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--color-primary);
+            color: #134252;
+            border: 2px solid var(--color-primary);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        button:hover {
+            background: var(--color-primary-hover);
+            border-color: var(--color-primary-active);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(33, 128, 141, 0.3);
+        }
+
+        button:active {
+            background: var(--color-primary-active);
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--color-focus-ring);
+        }
+
+        button.secondary {
+            background: transparent;
+            color: #134252;
+            border: 1px solid var(--color-primary);
+        }
+
+        button.secondary:hover {
+            background: rgba(33, 128, 141, 0.1);
+        }
+
+        button.danger {
+            background: var(--color-error);
+            color: #134252;
+        }
+
+        button.danger:hover {
+            background: #a01228;
+        }
+
+        button.small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .btn-group {
             display: flex;
-            justify-content: space-between;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: var(--spacing-sm);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        th {
+            background: rgba(33, 128, 141, 0.05);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        tr:hover {
+            background: rgba(33, 128, 141, 0.03);
+        }
+
+        .classroom-grid {
+            display: flex;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
+            min-height: 500px;
+            background: var(--color-bg-secondary);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
         }
 
-        .classroom {
+        .grid-container {
             display: inline-block;
-            padding: 30px;
+            border: 3px solid var(--color-text);
+            padding: var(--spacing-lg);
             background: white;
-            border: 3px solid #dee2e6;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-
-        .empty-state h2 {
-            font-size: 2em;
-            margin-bottom: 15px;
-        }
-
-        .empty-state p {
-            font-size: 1.1em;
-            margin-bottom: 10px;
+            position: relative;
         }
 
         .podium {
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px;
-            margin-bottom: 20px;
             font-weight: bold;
-            font-size: 1.2em;
+            text-align: center;
+            color: var(--color-text-secondary);
+            font-size: 12px;
+            margin-bottom: var(--spacing-md);
         }
 
-        .podium-bottom {
-            margin-bottom: 0;
-            margin-top: 20px;
-        }
-
-        .seat-grid {
-            display: grid;
-            gap: 12px;
-        }
-
-        .seat-row {
+        .grid-row {
             display: flex;
-            gap: 12px;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
             justify-content: center;
         }
 
         .seat {
-            width: 80px;
-            height: 90px;
-            border: 3px solid #667eea;
-            border-radius: 10px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            cursor: move;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
-            transition: all 0.3s;
-            position: relative;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            font-weight: 500;
+            font-size: 11px;
+            transition: all 0.2s;
+            background: white;
+            overflow: hidden;
+            draggable: true;
         }
 
-        .seat:hover {
+        .seat.drag-over {
+            background: rgba(33, 128, 141, 0.2);
+            border-color: var(--color-primary);
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
         }
 
         .seat.dragging {
             opacity: 0.5;
-            transform: rotate(5deg);
+        }
+
+        .seat.student {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 4px rgba(33, 128, 141, 0.2);
+        }
+
+        .seat.student:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 128, 141, 0.3);
         }
 
         .seat.empty {
-            border: 2px dashed #ccc;
-            background: transparent;
-            cursor: default;
-        }
-
-        .seat.empty:hover {
-            transform: none;
-            box-shadow: none;
+            border-style: dashed;
+            border-color: var(--color-border);
+            background: rgba(94, 82, 64, 0.03);
         }
 
         .seat.conflict {
-            border-color: #dc3545;
-            background: linear-gradient(135deg, #fff0f0 0%, #ffe0e0 100%);
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            background: rgba(192, 21, 47, 0.15);
+            border-color: var(--color-error);
         }
 
         .seat.fixed {
-            border-color: #28a745;
-            background: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 100%);
-        }
-
-        .seat.fixed::after {
-            content: '🔒';
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 0.8em;
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
         }
 
         .seat-number {
-            font-size: 0.85em;
-            color: #6c757d;
-            font-weight: 600;
+            font-size: 10px;
+            color: var(--color-text-secondary);
         }
 
         .seat-name {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #212529;
-            margin-top: 5px;
+            font-size: 11px;
+            color: var(--color-text);
+            margin-top: 2px;
         }
 
         .rule-item {
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin: 8px 0;
+            background: rgba(33, 128, 141, 0.05);
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-md);
+            border-left: 3px solid var(--color-primary);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .student-select {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 10px;
-            align-items: center;
-            margin: 15px 0;
-        }
-
-        .student-item {
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid #667eea;
-        }
-
-        .student-item.front-row {
-            border-left-color: #17a2b8;
-            background: #e7f7f9;
-        }
-
-        .student-item.tall {
-            border-left-color: #fd7e14;
-            background: #fff3e7;
-        }
-
-        .student-item:hover {
-            background: #e9ecef;
-        }
-
-        .student-item.front-row:hover {
-            background: #d1ecf1;
-        }
-
-        .student-item.tall:hover {
-            background: #ffe8cc;
-        }
-
-        .student-info {
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .student-number {
-            color: #667eea;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
-        .student-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: bold;
-        }
-
-        .badge-front {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .badge-tall {
-            background: #fd7e14;
-            color: white;
-        }
-
-        .add-student-form {
-            display: grid;
-            grid-template-columns: 80px 1fr 100px auto;
-            gap: 10px;
-            align-items: end;
-            margin-bottom: 15px;
+        .rule-text {
+            font-size: 13px;
+            flex: 1;
         }
 
         .snapshot-item {
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin: 8px 0;
-            border-left: 4px solid #667eea;
+            background: rgba(33, 128, 141, 0.05);
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-md);
+            border-left: 3px solid var(--color-success);
+            font-size: 13px;
         }
 
-        .snapshot-item:hover {
-            background: #e9ecef;
+        .info-box {
+            background: rgba(50, 184, 198, 0.1);
+            border: 1px solid var(--color-success);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            font-size: 13px;
+            color: var(--color-text);
         }
 
-        .snapshot-name {
-            font-weight: bold;
-            color: #212529;
-            margin-bottom: 5px;
+        .error-box {
+            background: rgba(192, 21, 47, 0.1);
+            border: 1px solid var(--color-error);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            font-size: 13px;
+            color: var(--color-error);
         }
 
-        .snapshot-date {
-            font-size: 0.85em;
-            color: #6c757d;
+        .success-box {
+            background: rgba(50, 184, 198, 0.1);
+            border: 1px solid var(--color-success);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            font-size: 13px;
+            color: var(--color-text);
         }
 
-        .snapshot-actions {
-            margin-top: 10px;
+        .flex-row {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+
+        .flex-1 {
+            flex: 1;
         }
 
         .hidden {
             display: none;
         }
 
-        .info-box {
-            padding: 15px;
-            background: #d1ecf1;
-            border-left: 4px solid #0c5460;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #0c5460;
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
         }
 
-        .error-box {
-            padding: 15px;
-            background: #f8d7da;
-            border-left: 4px solid #721c24;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #721c24;
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
         }
 
-        .success-box {
-            padding: 15px;
-            background: #d4edda;
-            border-left: 4px solid #155724;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #155724;
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
         }
 
-        .student-list-container {
-            max-height: 300px;
-            overflow-y: auto;
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
-        .priority-info {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 15px 0;
-            font-size: 0.9em;
-            color: #856404;
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
-        .priority-info strong {
-            display: block;
-            margin-bottom: 5px;
+        .status-badge.success {
+            background: rgba(50, 184, 198, 0.2);
+            color: var(--color-success);
+        }
+
+        .status-badge.error {
+            background: rgba(192, 21, 47, 0.2);
+            color: var(--color-error);
+        }
+
+        .status-badge.warning {
+            background: rgba(168, 75, 47, 0.2);
+            color: var(--color-warning);
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                max-height: auto;
+            }
         }
 
         @media print {
             body {
                 background: white;
             }
-            .sidebar, .header, .view-controls {
-                display: none !important;
-            }
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
 
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
+            .panel, .control-panel {
+                box-shadow: none;
+                border: 1px solid #ccc;
             }
-            .add-student-form {
-                grid-template-columns: 1fr;
+
+            button, .tab-buttons {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎓 教室座位表產生器</h1>
-            <p>智能管理班級座位，支援前排與高大同學優先安排</p>
-        </div>
+        <header>
+            <h1>📚 教室座位表產生器</h1>
+            <p style="margin: var(--spacing-md) 0 0 0; color: var(--color-text-secondary);">為香港教師設計的座位安排管理工具</p>
+        </header>
 
-        <div class="main-content">
-            <!-- 側邊欄 -->
-            <div class="sidebar">
-                <!-- 學生管理 -->
-                <div class="section">
-                    <h3>👥 學生管理</h3>
-                    <div class="add-student-form">
-                        <div>
-                            <label style="margin-top: 0;">座號</label>
-                            <input type="number" id="newSeatNo" placeholder="1" min="1">
-                        </div>
-                        <div>
-                            <label style="margin-top: 0;">姓名</label>
-                            <input type="text" id="newStudentName" placeholder="王小明">
-                        </div>
-                        <div>
-                            <label style="margin-top: 0;">類型</label>
-                            <select id="studentType">
-                                <option value="normal">普通</option>
-                                <option value="front">前排</option>
-                                <option value="tall">高大</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-success" onclick="app.addStudent()" style="margin-top: 28px;">新增</button>
+        <div class="layout">
+            <!-- 左側控制面板 -->
+            <aside class="panel control-panel">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="students">學生</button>
+                    <button class="tab-btn" data-tab="classroom">教室</button>
+                    <button class="tab-btn" data-tab="rules">規則</button>
+                    <button class="tab-btn" data-tab="snapshots">快照</button>
+                </div>
+
+                <!-- 學生標籤 -->
+                <div id="students" class="tab-content active">
+                    <h2>學生名單</h2>
+                    
+                    <div class="form-group">
+                        <label>班級名稱</label>
+                        <input type="text" id="className" placeholder="例：3A 班" value="3A 班">
                     </div>
 
-                    <div class="priority-info">
-                        <strong>📌 優先順序說明：</strong>
-                        <div>1️⃣ 固定座位學生</div>
-                        <div>2️⃣ 前排學生（藍色）→ 前面座位</div>
-                        <div>3️⃣ 高大學生（橘色）→ 後面座位</div>
-                        <div>4️⃣ 普通學生 → 剩餘座位</div>
+                    <div class="form-group">
+                        <label>課程日期</label>
+                        <input type="date" id="classDate">
                     </div>
 
-                    <div id="studentCount" class="info-box hidden"></div>
-                    <div class="student-list-container" id="studentList"></div>
+                    <div class="form-group">
+                        <label>批量輸入學生 (座號,姓名)</label>
+                        <textarea id="studentInput" placeholder="1,陳同學&#10;2,王同學&#10;3,李同學"></textarea>
+                        <button style="margin-top: var(--spacing-sm); width: 100%;" onclick="importStudents()">匯入學生</button>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin-top: var(--spacing-lg);">目前學生</h3>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>座號</th>
+                                    <th>姓名</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentList"></tbody>
+                        </table>
+                    </div>
+
+                    <button style="width: 100%; margin-top: var(--spacing-md);" class="secondary" onclick="clearStudents()">清空名單</button>
                 </div>
 
-                <!-- 教室設定 -->
-                <div class="section">
-                    <h3>🏫 教室設定</h3>
-                    <label>排數（前後）</label>
-                    <input type="number" id="rows" value="6" min="1" max="10" onchange="app.updateConfig()">
+                <!-- 教室標籤 -->
+                <div id="classroom" class="tab-content">
+                    <h2>教室配置</h2>
 
-                    <label>列數（左右）</label>
-                    <input type="number" id="cols" value="6" min="1" max="8" onchange="app.updateConfig()">
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label>排數（縱向）</label>
+                            <input type="number" id="rows" min="3" max="10" value="6">
+                        </div>
+                        <div class="form-group">
+                            <label>列數（橫向）</label>
+                            <input type="number" id="cols" min="2" max="6" value="6">
+                        </div>
+                    </div>
 
-                    <label>空位處理</label>
-                    <select id="emptySeats" onchange="app.updateConfig()">
-                        <option value="show">顯示虛線框</option>
-                        <option value="hide">完全隱藏</option>
-                    </select>
+                    <div class="checkbox-group">
+                        <label style="margin-bottom: var(--spacing-sm);">空位處理</label>
+                        <div class="checkbox-item">
+                            <input type="radio" id="showEmpty" name="emptyDisplay" value="show" checked>
+                            <label for="showEmpty" style="margin: 0;">顯示空位 (虛線框)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="radio" id="hideEmpty" name="emptyDisplay" value="hide">
+                            <label for="hideEmpty" style="margin: 0;">隱藏空位</label>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin: var(--spacing-lg) 0 var(--spacing-md) 0;">視角選擇</h3>
+                    <div class="checkbox-item" style="margin-bottom: var(--spacing-md);">
+                        <input type="radio" id="teacherView" name="perspective" value="teacher" checked>
+                        <label for="teacherView" style="margin: 0;">📍 教師視角 (講桌在下)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="radio" id="studentView" name="perspective" value="student">
+                        <label for="studentView" style="margin: 0;">👥 學生視角 (講桌在上)</label>
+                    </div>
+
+                    <button style="width: 100%; margin-top: var(--spacing-lg);" onclick="updateClassroom()">更新配置</button>
                 </div>
 
-                <!-- 規則設定 -->
-                <div class="section">
-                    <h3>⚙️ 規則設定</h3>
+                <!-- 規則標籤 -->
+                <div id="rules" class="tab-content">
+                    <h2>約束規則</h2>
 
-                    <button class="btn btn-primary" onclick="app.showAddRule('adjacent')">新增相鄰限制</button>
-                    <button class="btn btn-primary" onclick="app.showAddRule('ninegrid')">新增九宮格限制</button>
-                    <button class="btn btn-success" onclick="app.showAddRule('fixed')">固定座位</button>
+                    <h3 style="font-size: 13px; margin: var(--spacing-lg) 0 var(--spacing-sm) 0;">相鄰限制</h3>
+                    <div class="form-group">
+                        <select id="adjacentStudent1">
+                            <option value="">選擇學生 A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="adjacentStudent2">
+                            <option value="">選擇學生 B</option>
+                        </select>
+                    </div>
+                    <button style="width: 100%;" onclick="addAdjacentRule()">新增相鄰限制</button>
 
-                    <div id="rulesList"></div>
+                    <h3 style="font-size: 13px; margin: var(--spacing-lg) 0 var(--spacing-sm) 0;">九宮格限制</h3>
+                    <div class="form-group">
+                        <select id="gridStudent1">
+                            <option value="">選擇學生 A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="gridStudent2">
+                            <option value="">選擇學生 B</option>
+                        </select>
+                    </div>
+                    <button style="width: 100%;" onclick="addGridRule()">新增九宮格限制</button>
 
-                    <label>前後翻轉強度</label>
-                    <select id="flipVertical">
-                        <option value="0">無</option>
-                        <option value="30">低 (30%)</option>
-                        <option value="60">中 (60%)</option>
-                        <option value="90">高 (90%)</option>
-                    </select>
+                    <h3 style="font-size: 13px; margin: var(--spacing-lg) 0 var(--spacing-sm) 0;">位置限制</h3>
+                    <div class="form-group">
+                        <select id="positionStudent">
+                            <option value="">選擇學生</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="positionType" onchange="updateFixedSeatSelector()">
+                            <option value="front">必須坐前排 (1-2行)</option>
+                            <option value="tall">高大同學 (第5行或側邊)</option>
+                            <option value="fixed">固定座位</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="fixedSeatSelector" style="display: none;">
+                        <label>選擇座位 (行,列)</label>
+                        <input type="text" id="fixedSeatInput" placeholder="例：1,3" value="">
+                        <small style="display: block; margin-top: 4px; color: var(--color-text-secondary);">輸入行號 (1-6) 和列號 (1-6)</small>
+                    </div>
+                    <button style="width: 100%; margin-bottom: var(--spacing-md);" onclick="addPositionRule()">新增位置限制</button>
 
-                    <label>左右翻轉強度</label>
-                    <select id="flipHorizontal">
-                        <option value="0">無</option>
-                        <option value="30">低 (30%)</option>
-                        <option value="60">中 (60%)</option>
-                        <option value="90">高 (90%)</option>
-                    </select>
+                    <h3 style="font-size: 13px; margin: var(--spacing-lg) 0 var(--spacing-sm) 0;">相鄰同學對 (一起坐)</h3>
+                    <div class="form-group">
+                        <select id="adjacentPairStudent1">
+                            <option value="">選擇學生 A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="adjacentPairStudent2">
+                            <option value="">選擇學生 B</option>
+                        </select>
+                    </div>
+                    <button style="width: 100%;" onclick="addAdjacentPair()">新增相鄰對 (必須坐一起)</button>
+
+                    <h3 style="font-size: 13px; margin: var(--spacing-lg) 0 var(--spacing-sm) 0;">翻轉強度</h3>
+                    <div class="checkbox-item" style="margin-bottom: var(--spacing-sm);">
+                        <input type="checkbox" id="flipVertical">
+                        <label for="flipVertical" style="margin: 0;">前後翻轉</label>
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: var(--spacing-md);">
+                        <input type="checkbox" id="flipHorizontal">
+                        <label for="flipHorizontal" style="margin: 0;">左右翻轉</label>
+                    </div>
+                    <div class="form-group">
+                        <label>翻轉強度</label>
+                        <select id="flipStrength">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+
+                    <div id="rulesList" style="margin-top: var(--spacing-lg); max-height: 150px; overflow-y: auto;"></div>
                 </div>
 
-                <!-- 產生座位 -->
-                <div class="section">
-                    <h3>🎲 座位產生</h3>
-                    <button class="btn btn-success" onclick="app.generateSeating()" style="width: 100%;">重新產生座位</button>
-                    <button class="btn btn-danger" onclick="app.autoFixConflicts()" style="width: 100%; margin-top: 10px;">自動修正衝突</button>
-                </div>
+                <!-- 快照標籤 -->
+                <div id="snapshots" class="tab-content">
+                    <h2>快照管理</h2>
 
-                <!-- 歷史記錄 -->
-                <div class="section">
-                    <h3>📚 歷史記錄</h3>
-                    <input type="text" id="snapshotName" placeholder="輸入快照名稱">
-                    <button class="btn btn-success" onclick="app.saveSnapshot()" style="width: 100%;">保存快照</button>
-                    <div id="snapshotsList"></div>
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label>快照名稱</label>
+                        <input type="text" id="snapshotName" placeholder="例：星期一" value="">
+                    </div>
+                    <button style="width: 100%; margin-bottom: var(--spacing-lg);" onclick="saveSnapshot()">💾 保存快照</button>
 
-            <!-- 工作區 -->
-            <div class="workspace">
-                <div class="view-controls">
+                    <div id="snapshotsList" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </aside>
+
+            <!-- 右側主顯示面板 -->
+            <main class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                    <h2 style="margin: 0;">座位表</h2>
                     <div>
-                        <label style="display: inline; margin-right: 10px;">視角切換：</label>
-                        <button class="btn btn-primary" onclick="app.setView('teacher')">教師視角</button>
-                        <button class="btn btn-primary" onclick="app.setView('student')">學生視角</button>
-                    </div>
-                    <div>
-                        <span id="currentView" style="font-weight: bold; color: #667eea;">當前：教師視角</span>
+                        <button onclick="generateSeating()">🔄 重新產生座位</button>
+                        <button onclick="autoFix()" style="margin-left: var(--spacing-sm);">✓ 自動修正</button>
+                        <button onclick="exportPNG()" style="margin-left: var(--spacing-sm);">📊 匯出 PNG</button>
+                        <button onclick="exportPDF()" style="margin-left: var(--spacing-sm);">📄 匯出 PDF</button>
                     </div>
                 </div>
 
-                <div id="classroomContainer">
-                    <div class="empty-state">
-                        <h2>👋 歡迎使用座位表產生器</h2>
-                        <p>請先在左側新增學生，然後點擊「重新產生座位」</p>
-                        <p>💡 提示：您可以設定學生類型（普通/前排/高大）來優化座位安排</p>
+                <div id="statusContainer"></div>
+                <div id="classroomGrid" class="classroom-grid">
+                    <div class="info-box" style="text-align: center;">
+                        請在左側面板中輸入學生名單和設定教室配置，然後點擊「重新產生座位」
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 規則對話框 -->
-    <div id="ruleDialog" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-        <div style="background: white; padding: 30px; border-radius: 16px; width: 500px; max-width: 90%;">
-            <h3 id="dialogTitle" style="margin-bottom: 20px;"></h3>
-            <div id="dialogContent"></div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button class="btn btn-secondary" onclick="app.closeDialog()">取消</button>
-                <button class="btn btn-primary" onclick="app.confirmRule()">確認</button>
-            </div>
+            </main>
         </div>
     </div>
 
     <script>
-        const app = {
+        // 全局狀態
+        let state = {
             students: [],
             seating: [],
-            rules: {
-                adjacent: [],
-                ninegrid: [],
-                fixed: []
-            },
-            config: {
-                rows: 6,
-                cols: 6,
-                emptySeats: 'show',
-                view: 'teacher'
-            },
-            draggedElement: null,
-            draggedData: null,
-            currentRuleType: null,
-
-            init() {
-                try {
-                    this.loadFromLocalStorage();
-                    this.renderClassroom();
-                    this.renderRules();
-                    this.renderSnapshots();
-                    this.renderStudentList();
-
-                    document.addEventListener('keydown', (e) => {
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-                            e.preventDefault();
-                            this.undo();
-                        }
-                    });
-
-                    console.log('座位表產生器初始化成功');
-                } catch (error) {
-                    console.error('初始化錯誤:', error);
-                    alert('系統初始化時發生錯誤，請重新整理頁面');
-                }
-            },
-
-            addStudent() {
-                try {
-                    const seatNo = parseInt(document.getElementById('newSeatNo').value);
-                    const name = document.getElementById('newStudentName').value.trim();
-                    const type = document.getElementById('studentType').value;
-
-                    if (!seatNo || seatNo <= 0) {
-                        alert('請輸入有效的座號（正整數）');
-                        return;
-                    }
-
-                    if (!name) {
-                        alert('請輸入學生姓名');
-                        return;
-                    }
-
-                    if (this.students.some(s => s.seatNo === seatNo)) {
-                        alert(`座號 ${seatNo} 已存在，請使用其他座號`);
-                        return;
-                    }
-
-                    this.students.push({ seatNo, name, type: type || 'normal' });
-                    this.students.sort((a, b) => a.seatNo - b.seatNo);
-
-                    document.getElementById('newSeatNo').value = '';
-                    document.getElementById('newStudentName').value = '';
-                    document.getElementById('studentType').value = 'normal';
-
-                    this.renderStudentList();
-                    this.saveToLocalStorage();
-                    this.updateStudentCount();
-
-                    const maxSeatNo = Math.max(...this.students.map(s => s.seatNo));
-                    document.getElementById('newSeatNo').value = maxSeatNo + 1;
-                } catch (error) {
-                    console.error('新增學生錯誤:', error);
-                    alert('新增學生時發生錯誤');
-                }
-            },
-
-            updateStudentCount() {
-                try {
-                    const total = this.students.length;
-                    const front = this.students.filter(s => s.type === 'front').length;
-                    const tall = this.students.filter(s => s.type === 'tall').length;
-                    const normal = this.students.filter(s => s.type === 'normal' || !s.type).length;
-
-                    document.getElementById('studentCount').className = 'info-box';
-                    document.getElementById('studentCount').innerHTML = `
-                        總共 ${total} 位學生：
-                        <span style="color: #17a2b8;">前排 ${front}</span> | 
-                        <span style="color: #fd7e14;">高大 ${tall}</span> | 
-                        普通 ${normal}
-                    `;
-                    document.getElementById('studentCount').classList.remove('hidden');
-                } catch (error) {
-                    console.error('更新學生統計錯誤:', error);
-                }
-            },
-
-            editStudent(seatNo) {
-                try {
-                    const student = this.students.find(s => s.seatNo === seatNo);
-                    if (!student) return;
-
-                    const newName = prompt('修改學生姓名：', student.name);
-                    if (newName && newName.trim()) {
-                        student.name = newName.trim();
-                        this.renderStudentList();
-                        this.renderClassroom();
-                        this.saveToLocalStorage();
-                    }
-                } catch (error) {
-                    console.error('編輯學生錯誤:', error);
-                }
-            },
-
-            changeStudentType(seatNo) {
-                try {
-                    const student = this.students.find(s => s.seatNo === seatNo);
-                    if (!student) return;
-
-                    const types = {
-                        'normal': '普通',
-                        'front': '前排',
-                        'tall': '高大'
-                    };
-
-                    const currentType = types[student.type || 'normal'];
-                    const newType = prompt(`目前類型：${currentType}
-
-請輸入新類型：
-1 = 普通
-2 = 前排
-3 = 高大`, '1');
-
-                    if (newType === '1') student.type = 'normal';
-                    else if (newType === '2') student.type = 'front';
-                    else if (newType === '3') student.type = 'tall';
-                    else return;
-
-                    this.renderStudentList();
-                    this.updateStudentCount();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('變更學生類型錯誤:', error);
-                }
-            },
-
-            deleteStudent(seatNo) {
-                try {
-                    if (!confirm('確定要刪除此學生嗎？')) return;
-
-                    this.students = this.students.filter(s => s.seatNo !== seatNo);
-
-                    for (let r = 0; r < this.seating.length; r++) {
-                        for (let c = 0; c < this.seating[r].length; c++) {
-                            if (this.seating[r][c]?.seatNo === seatNo) {
-                                this.seating[r][c] = null;
-                            }
-                        }
-                    }
-
-                    this.rules.adjacent = this.rules.adjacent.filter(rule => 
-                        rule.student1 !== seatNo && rule.student2 !== seatNo
-                    );
-                    this.rules.ninegrid = this.rules.ninegrid.filter(rule => 
-                        rule.student1 !== seatNo && rule.student2 !== seatNo
-                    );
-                    this.rules.fixed = this.rules.fixed.filter(rule => rule.seatNo !== seatNo);
-
-                    this.renderStudentList();
-                    this.renderClassroom();
-                    this.renderRules();
-                    this.saveToLocalStorage();
-                    this.updateStudentCount();
-                } catch (error) {
-                    console.error('刪除學生錯誤:', error);
-                }
-            },
-
-            renderStudentList() {
-                try {
-                    const container = document.getElementById('studentList');
-
-                    if (this.students.length === 0) {
-                        container.innerHTML = '<p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">尚未新增學生</p>';
-                        return;
-                    }
-
-                    let html = '';
-                    this.students.forEach(student => {
-                        const type = student.type || 'normal';
-                        const typeClass = type === 'front' ? 'front-row' : type === 'tall' ? 'tall' : '';
-                        const badge = type === 'front' ? '<span class="student-badge badge-front">前排</span>' :
-                                      type === 'tall' ? '<span class="student-badge badge-tall">高大</span>' : '';
-
-                        html += `
-                            <div class="student-item ${typeClass}">
-                                <div class="student-info">
-                                    <span class="student-number">${student.seatNo}</span>
-                                    <span>${student.name}</span>
-                                    ${badge}
-                                </div>
-                                <div>
-                                    <button class="btn btn-secondary btn-small" onclick="app.changeStudentType(${student.seatNo})" title="變更類型">🔄</button>
-                                    <button class="btn btn-primary btn-small" onclick="app.editStudent(${student.seatNo})">編輯</button>
-                                    <button class="btn btn-danger btn-small" onclick="app.deleteStudent(${student.seatNo})">刪除</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    container.innerHTML = html;
-                } catch (error) {
-                    console.error('顯示學生列表錯誤:', error);
-                }
-            },
-
-            updateConfig() {
-                try {
-                    this.config.rows = parseInt(document.getElementById('rows').value) || 6;
-                    this.config.cols = parseInt(document.getElementById('cols').value) || 6;
-                    this.config.emptySeats = document.getElementById('emptySeats').value;
-                    this.renderClassroom();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('更新配置錯誤:', error);
-                }
-            },
-
-            generateSeating() {
-                try {
-                    if (this.students.length === 0) {
-                        alert('請先新增學生');
-                        return;
-                    }
-
-                    const totalSeats = this.config.rows * this.config.cols;
-                    if (this.students.length > totalSeats) {
-                        alert(`座位不足！學生人數：${this.students.length}，座位數：${totalSeats}`);
-                        return;
-                    }
-
-                    this.seating = Array(this.config.rows).fill(null).map(() => 
-                        Array(this.config.cols).fill(null)
-                    );
-
-                    let fixedStudents = [];
-                    let frontStudents = [];
-                    let tallStudents = [];
-                    let normalStudents = [];
-
-                    this.students.forEach(student => {
-                        const isFixed = this.rules.fixed.some(rule => rule.seatNo === student.seatNo);
-                        const type = student.type || 'normal';
-
-                        if (isFixed) {
-                            fixedStudents.push(student);
-                        } else if (type === 'front') {
-                            frontStudents.push(student);
-                        } else if (type === 'tall') {
-                            tallStudents.push(student);
-                        } else {
-                            normalStudents.push(student);
-                        }
-                    });
-
-                    this.rules.fixed.forEach(rule => {
-                        const student = this.students.find(s => s.seatNo === rule.seatNo);
-                        if (student && rule.row < this.config.rows && rule.col < this.config.cols) {
-                            this.seating[rule.row][rule.col] = student;
-                        }
-                    });
-
-                    const getAvailableSeats = () => {
-                        const seats = [];
-                        for (let r = 0; r < this.config.rows; r++) {
-                            for (let c = 0; c < this.config.cols; c++) {
-                                if (!this.seating[r][c]) {
-                                    seats.push({ row: r, col: c });
-                                }
-                            }
-                        }
-                        return seats;
-                    };
-
-                    const flipV = parseInt(document.getElementById('flipVertical').value) / 100;
-                    const flipH = parseInt(document.getElementById('flipHorizontal').value) / 100;
-
-                    frontStudents = this.shuffleWithFlip(frontStudents, flipV, flipH);
-                    const frontSeats = getAvailableSeats().sort((a, b) => a.row - b.row);
-                    frontStudents.forEach((student, i) => {
-                        if (i < frontSeats.length) {
-                            const seat = frontSeats[i];
-                            this.seating[seat.row][seat.col] = student;
-                        }
-                    });
-
-                    tallStudents = this.shuffleWithFlip(tallStudents, flipV, flipH);
-                    const backSeats = getAvailableSeats().sort((a, b) => b.row - a.row);
-                    tallStudents.forEach((student, i) => {
-                        if (i < backSeats.length) {
-                            const seat = backSeats[i];
-                            this.seating[seat.row][seat.col] = student;
-                        }
-                    });
-
-                    normalStudents = this.shuffleWithFlip(normalStudents, flipV, flipH);
-                    const remainingSeats = getAvailableSeats();
-                    normalStudents.forEach((student, i) => {
-                        if (i < remainingSeats.length) {
-                            const seat = remainingSeats[i];
-                            this.seating[seat.row][seat.col] = student;
-                        }
-                    });
-
-                    this.renderClassroom();
-                    this.checkConflicts();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('產生座位錯誤:', error);
-                    alert('產生座位時發生錯誤');
-                }
-            },
-
-            shuffleWithFlip(array, flipV, flipH) {
-                const shuffled = [...array];
-
-                if (Math.random() < flipV) {
-                    shuffled.reverse();
-                }
-
-                for (let i = shuffled.length - 1; i > 0; i--) {
-                    let j;
-                    if (Math.random() < flipH) {
-                        j = Math.floor(Math.random() * i / 2);
-                    } else {
-                        j = Math.floor(Math.random() * (i + 1));
-                    }
-                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                }
-
-                return shuffled;
-            },
-
-            renderClassroom() {
-                try {
-                    const container = document.getElementById('classroomContainer');
-
-                    if (this.students.length === 0 || this.seating.length === 0) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <h2>👋 歡迎使用座位表產生器</h2>
-                                <p>請先在左側新增學生，然後點擊「重新產生座位」</p>
-                                <p>💡 提示：您可以設定學生類型（普通/前排/高大）來優化座位安排</p>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    const classroom = document.createElement('div');
-                    classroom.className = 'classroom';
-                    classroom.id = 'classroom';
-
-                    let html = '';
-
-                    if (this.config.view === 'student') {
-                        html += '<div class="podium">📚 講桌 📚</div>';
-                    }
-
-                    html += '<div class="seat-grid">';
-
-                    const rows = this.config.view === 'teacher' ? 
-                        [...Array(this.config.rows).keys()].reverse() : 
-                        [...Array(this.config.rows).keys()];
-
-                    rows.forEach(r => {
-                        html += '<div class="seat-row">';
-                        for (let c = 0; c < this.config.cols; c++) {
-                            const student = this.seating[r]?.[c];
-                            const isFixed = this.isFixedSeat(r, c);
-
-                            if (student) {
-                                html += `
-                                    <div class="seat ${isFixed ? 'fixed' : ''}" 
-                                         draggable="${!isFixed}"
-                                         data-row="${r}" 
-                                         data-col="${c}"
-                                         ondragstart="app.handleDragStart(event)"
-                                         ondragover="app.handleDragOver(event)"
-                                         ondrop="app.handleDrop(event)"
-                                         ondragend="app.handleDragEnd(event)">
-                                        <div class="seat-number">${student.seatNo}</div>
-                                        <div class="seat-name">${student.name}</div>
-                                    </div>
-                                `;
-                            } else if (this.config.emptySeats === 'show') {
-                                html += `
-                                    <div class="seat empty" 
-                                         data-row="${r}" 
-                                         data-col="${c}"
-                                         ondragover="app.handleDragOver(event)"
-                                         ondrop="app.handleDrop(event)">
-                                    </div>
-                                `;
-                            }
-                        }
-                        html += '</div>';
-                    });
-
-                    html += '</div>';
-
-                    if (this.config.view === 'teacher') {
-                        html += '<div class="podium podium-bottom">📚 講桌 📚</div>';
-                    }
-
-                    classroom.innerHTML = html;
-                    container.innerHTML = '';
-                    container.appendChild(classroom);
-                } catch (error) {
-                    console.error('顯示教室錯誤:', error);
-                }
-            },
-
-            handleDragStart(event) {
-                const row = parseInt(event.target.dataset.row);
-                const col = parseInt(event.target.dataset.col);
-                this.draggedData = { row, col };
-                event.target.classList.add('dragging');
-                event.dataTransfer.effectAllowed = 'move';
-            },
-
-            handleDragOver(event) {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'move';
-            },
-
-            handleDrop(event) {
-                event.preventDefault();
-                const targetRow = parseInt(event.currentTarget.dataset.row);
-                const targetCol = parseInt(event.currentTarget.dataset.col);
-
-                if (this.draggedData) {
-                    const { row: fromRow, col: fromCol } = this.draggedData;
-
-                    const temp = this.seating[fromRow][fromCol];
-                    this.seating[fromRow][fromCol] = this.seating[targetRow][targetCol];
-                    this.seating[targetRow][targetCol] = temp;
-
-                    this.renderClassroom();
-                    this.checkConflicts();
-                    this.saveToLocalStorage();
-                }
-            },
-
-            handleDragEnd(event) {
-                event.target.classList.remove('dragging');
-                this.draggedData = null;
-            },
-
-            isFixedSeat(row, col) {
-                return this.rules.fixed.some(rule => rule.row === row && rule.col === col);
-            },
-
-            checkConflicts() {
-                try {
-                    document.querySelectorAll('.seat.conflict').forEach(el => {
-                        el.classList.remove('conflict');
-                    });
-
-                    let hasConflict = false;
-
-                    this.rules.adjacent.forEach(rule => {
-                        const pos1 = this.findStudentPosition(rule.student1);
-                        const pos2 = this.findStudentPosition(rule.student2);
-
-                        if (pos1 && pos2 && this.areAdjacent(pos1, pos2)) {
-                            this.markConflict(pos1);
-                            this.markConflict(pos2);
-                            hasConflict = true;
-                        }
-                    });
-
-                    this.rules.ninegrid.forEach(rule => {
-                        const pos1 = this.findStudentPosition(rule.student1);
-                        const pos2 = this.findStudentPosition(rule.student2);
-
-                        if (pos1 && pos2 && this.inNineGrid(pos1, pos2)) {
-                            this.markConflict(pos1);
-                            this.markConflict(pos2);
-                            hasConflict = true;
-                        }
-                    });
-
-                    if (hasConflict) {
-                        setTimeout(() => {
-                            alert('偵測到座位衝突！請手動調整或點擊「自動修正衝突」');
-                        }, 300);
-                    }
-                } catch (error) {
-                    console.error('檢查衝突錯誤:', error);
-                }
-            },
-
-            findStudentPosition(seatNo) {
-                for (let r = 0; r < this.seating.length; r++) {
-                    for (let c = 0; c < this.seating[r].length; c++) {
-                        if (this.seating[r][c]?.seatNo === seatNo) {
-                            return { row: r, col: c };
-                        }
-                    }
-                }
-                return null;
-            },
-
-            areAdjacent(pos1, pos2) {
-                const rowDiff = Math.abs(pos1.row - pos2.row);
-                const colDiff = Math.abs(pos1.col - pos2.col);
-                return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-            },
-
-            inNineGrid(pos1, pos2) {
-                const rowDiff = Math.abs(pos1.row - pos2.row);
-                const colDiff = Math.abs(pos1.col - pos2.col);
-                return rowDiff <= 1 && colDiff <= 1;
-            },
-
-            markConflict(pos) {
-                const seat = document.querySelector(`[data-row="${pos.row}"][data-col="${pos.col}"]`);
-                if (seat) seat.classList.add('conflict');
-            },
-
-            autoFixConflicts() {
-                try {
-                    let attempts = 0;
-                    const maxAttempts = 100;
-
-                    while (attempts < maxAttempts) {
-                        let hasConflict = false;
-
-                        for (const rule of this.rules.adjacent) {
-                            const pos1 = this.findStudentPosition(rule.student1);
-                            const pos2 = this.findStudentPosition(rule.student2);
-
-                            if (pos1 && pos2 && this.areAdjacent(pos1, pos2)) {
-                                this.swapWithRandom(pos2);
-                                hasConflict = true;
-                            }
-                        }
-
-                        for (const rule of this.rules.ninegrid) {
-                            const pos1 = this.findStudentPosition(rule.student1);
-                            const pos2 = this.findStudentPosition(rule.student2);
-
-                            if (pos1 && pos2 && this.inNineGrid(pos1, pos2)) {
-                                this.swapWithRandom(pos2);
-                                hasConflict = true;
-                            }
-                        }
-
-                        if (!hasConflict) break;
-                        attempts++;
-                    }
-
-                    this.renderClassroom();
-                    this.checkConflicts();
-                    this.saveToLocalStorage();
-
-                    if (attempts >= maxAttempts) {
-                        alert('無法自動修正所有衝突，請手動調整');
-                    } else {
-                        alert('衝突已修正！');
-                    }
-                } catch (error) {
-                    console.error('自動修正衝突錯誤:', error);
-                }
-            },
-
-            swapWithRandom(pos) {
-                const available = [];
-                for (let r = 0; r < this.config.rows; r++) {
-                    for (let c = 0; c < this.config.cols; c++) {
-                        if (!this.isFixedSeat(r, c) && this.seating[r][c]) {
-                            available.push({ row: r, col: c });
-                        }
-                    }
-                }
-
-                if (available.length > 0) {
-                    const random = available[Math.floor(Math.random() * available.length)];
-                    const temp = this.seating[pos.row][pos.col];
-                    this.seating[pos.row][pos.col] = this.seating[random.row][random.col];
-                    this.seating[random.row][random.col] = temp;
-                }
-            },
-
-            showAddRule(type) {
-                try {
-                    if (this.students.length === 0) {
-                        alert('請先新增學生');
-                        return;
-                    }
-
-                    this.currentRuleType = type;
-                    const dialog = document.getElementById('ruleDialog');
-                    const title = document.getElementById('dialogTitle');
-                    const content = document.getElementById('dialogContent');
-
-                    if (type === 'fixed') {
-                        title.textContent = '固定座位';
-                        content.innerHTML = `
-                            <label>選擇學生</label>
-                            <select id="fixedStudent">
-                                ${this.students.map(s => `<option value="${s.seatNo}">${s.seatNo} - ${s.name}</option>`).join('')}
-                            </select>
-                            <label>排數（從前到後，1-${this.config.rows}）</label>
-                            <input type="number" id="fixedRow" min="1" max="${this.config.rows}" value="1">
-                            <label>列數（從左到右，1-${this.config.cols}）</label>
-                            <input type="number" id="fixedCol" min="1" max="${this.config.cols}" value="1">
-                        `;
-                    } else {
-                        title.textContent = type === 'adjacent' ? '新增相鄰限制' : '新增九宮格限制';
-                        content.innerHTML = `
-                            <div class="student-select">
-                                <select id="student1">
-                                    ${this.students.map(s => `<option value="${s.seatNo}">${s.seatNo} - ${s.name}</option>`).join('')}
-                                </select>
-                                <span>和</span>
-                                <select id="student2">
-                                    ${this.students.map(s => `<option value="${s.seatNo}">${s.seatNo} - ${s.name}</option>`).join('')}
-                                </select>
-                            </div>
-                        `;
-                    }
-
-                    dialog.classList.remove('hidden');
-                } catch (error) {
-                    console.error('顯示規則對話框錯誤:', error);
-                }
-            },
-
-            closeDialog() {
-                document.getElementById('ruleDialog').classList.add('hidden');
-            },
-
-            confirmRule() {
-                try {
-                    if (this.currentRuleType === 'fixed') {
-                        const seatNo = parseInt(document.getElementById('fixedStudent').value);
-                        const row = parseInt(document.getElementById('fixedRow').value) - 1;
-                        const col = parseInt(document.getElementById('fixedCol').value) - 1;
-
-                        if (row >= 0 && row < this.config.rows && col >= 0 && col < this.config.cols) {
-                            this.rules.fixed.push({ seatNo, row, col });
-                        } else {
-                            alert('座位位置超出範圍');
-                            return;
-                        }
-                    } else {
-                        const student1 = parseInt(document.getElementById('student1').value);
-                        const student2 = parseInt(document.getElementById('student2').value);
-
-                        if (student1 === student2) {
-                            alert('不能選擇相同的學生');
-                            return;
-                        }
-
-                        this.rules[this.currentRuleType].push({ student1, student2 });
-                    }
-
-                    this.renderRules();
-                    this.closeDialog();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('確認規則錯誤:', error);
-                }
-            },
-
-            renderRules() {
-                try {
-                    const container = document.getElementById('rulesList');
-                    let html = '';
-
-                    this.rules.adjacent.forEach((rule, index) => {
-                        const s1 = this.students.find(s => s.seatNo === rule.student1);
-                        const s2 = this.students.find(s => s.seatNo === rule.student2);
-                        html += `
-                            <div class="rule-item">
-                                <span>🚫 相鄰：${s1?.name || '?'} ↔ ${s2?.name || '?'}</span>
-                                <button class="btn btn-danger btn-small" onclick="app.removeRule('adjacent', ${index})">刪除</button>
-                            </div>
-                        `;
-                    });
-
-                    this.rules.ninegrid.forEach((rule, index) => {
-                        const s1 = this.students.find(s => s.seatNo === rule.student1);
-                        const s2 = this.students.find(s => s.seatNo === rule.student2);
-                        html += `
-                            <div class="rule-item">
-                                <span>⬛ 九宮格：${s1?.name || '?'} ↔ ${s2?.name || '?'}</span>
-                                <button class="btn btn-danger btn-small" onclick="app.removeRule('ninegrid', ${index})">刪除</button>
-                            </div>
-                        `;
-                    });
-
-                    this.rules.fixed.forEach((rule, index) => {
-                        const s = this.students.find(s => s.seatNo === rule.seatNo);
-                        html += `
-                            <div class="rule-item">
-                                <span>🔒 固定：${s?.name || '?'} → 第${rule.row + 1}排${rule.col + 1}列</span>
-                                <button class="btn btn-danger btn-small" onclick="app.removeRule('fixed', ${index})">刪除</button>
-                            </div>
-                        `;
-                    });
-
-                    container.innerHTML = html || '<p style="color: #6c757d; font-size: 0.9em;">尚未設定規則</p>';
-                } catch (error) {
-                    console.error('顯示規則錯誤:', error);
-                }
-            },
-
-            removeRule(type, index) {
-                try {
-                    this.rules[type].splice(index, 1);
-                    this.renderRules();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('刪除規則錯誤:', error);
-                }
-            },
-
-            setView(view) {
-                try {
-                    this.config.view = view;
-                    document.getElementById('currentView').textContent = 
-                        view === 'teacher' ? '當前：教師視角' : '當前：學生視角';
-                    this.renderClassroom();
-                    this.saveToLocalStorage();
-                } catch (error) {
-                    console.error('切換視角錯誤:', error);
-                }
-            },
-
-            saveSnapshot() {
-                try {
-                    if (this.students.length === 0) {
-                        alert('請先新增學生');
-                        return;
-                    }
-
-                    const name = document.getElementById('snapshotName').value || `快照 ${new Date().toLocaleString()}`;
-                    const snapshots = JSON.parse(localStorage.getItem('seatingSnapshots') || '[]');
-
-                    snapshots.push({
-                        id: Date.now(),
-                        name,
-                        date: new Date().toISOString(),
-                        data: {
-                            students: this.students,
-                            seating: this.seating,
-                            rules: this.rules,
-                            config: this.config
-                        }
-                    });
-
-                    localStorage.setItem('seatingSnapshots', JSON.stringify(snapshots));
-                    document.getElementById('snapshotName').value = '';
-                    this.renderSnapshots();
-                    alert('快照已保存！');
-                } catch (error) {
-                    console.error('保存快照錯誤:', error);
-                    alert('保存快照失敗');
-                }
-            },
-
-            renderSnapshots() {
-                try {
-                    const container = document.getElementById('snapshotsList');
-                    const snapshots = JSON.parse(localStorage.getItem('seatingSnapshots') || '[]');
-
-                    if (snapshots.length === 0) {
-                        container.innerHTML = '<p style="color: #6c757d; font-size: 0.9em;">尚無保存的快照</p>';
-                        return;
-                    }
-
-                    let html = '';
-                    snapshots.slice().reverse().forEach(snapshot => {
-                        html += `
-                            <div class="snapshot-item">
-                                <div class="snapshot-name">${snapshot.name}</div>
-                                <div class="snapshot-date">${new Date(snapshot.date).toLocaleString()}</div>
-                                <div class="snapshot-actions">
-                                    <button class="btn btn-primary btn-small" onclick="app.loadSnapshot(${snapshot.id})">載入</button>
-                                    <button class="btn btn-danger btn-small" onclick="app.deleteSnapshot(${snapshot.id})">刪除</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    container.innerHTML = html;
-                } catch (error) {
-                    console.error('顯示快照錯誤:', error);
-                }
-            },
-
-            loadSnapshot(id) {
-                try {
-                    const snapshots = JSON.parse(localStorage.getItem('seatingSnapshots') || '[]');
-                    const snapshot = snapshots.find(s => s.id === id);
-
-                    if (snapshot) {
-                        this.students = snapshot.data.students || [];
-                        this.seating = snapshot.data.seating || [];
-                        this.rules = snapshot.data.rules || { adjacent: [], ninegrid: [], fixed: [] };
-                        this.config = snapshot.data.config || this.config;
-
-                        document.getElementById('rows').value = this.config.rows;
-                        document.getElementById('cols').value = this.config.cols;
-                        document.getElementById('emptySeats').value = this.config.emptySeats;
-
-                        this.renderClassroom();
-                        this.renderRules();
-                        this.renderStudentList();
-                        this.updateStudentCount();
-                        this.saveToLocalStorage();
-                        alert('快照已載入！');
-                    }
-                } catch (error) {
-                    console.error('載入快照錯誤:', error);
-                    alert('載入快照失敗');
-                }
-            },
-
-            deleteSnapshot(id) {
-                try {
-                    if (!confirm('確定要刪除此快照嗎？')) return;
-
-                    let snapshots = JSON.parse(localStorage.getItem('seatingSnapshots') || '[]');
-                    snapshots = snapshots.filter(s => s.id !== id);
-                    localStorage.setItem('seatingSnapshots', JSON.stringify(snapshots));
-                    this.renderSnapshots();
-                } catch (error) {
-                    console.error('刪除快照錯誤:', error);
-                }
-            },
-
-            saveToLocalStorage() {
-                try {
-                    const data = {
-                        students: this.students,
-                        seating: this.seating,
-                        rules: this.rules,
-                        config: this.config
-                    };
-                    localStorage.setItem('currentSeating', JSON.stringify(data));
-                } catch (error) {
-                    console.error('保存資料錯誤:', error);
-                }
-            },
-
-            loadFromLocalStorage() {
-                try {
-                    const saved = localStorage.getItem('currentSeating');
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        this.students = data.students || [];
-
-                        this.students.forEach(student => {
-                            if (!student.type) student.type = 'normal';
-                        });
-
-                        this.seating = data.seating || [];
-                        this.rules = data.rules || { adjacent: [], ninegrid: [], fixed: [] };
-                        this.config = data.config || this.config;
-
-                        document.getElementById('rows').value = this.config.rows;
-                        document.getElementById('cols').value = this.config.cols;
-                        document.getElementById('emptySeats').value = this.config.emptySeats;
-
-                        if (this.students.length > 0) {
-                            const maxSeatNo = Math.max(...this.students.map(s => s.seatNo));
-                            document.getElementById('newSeatNo').value = maxSeatNo + 1;
-                            this.updateStudentCount();
-                        }
-                    }
-                } catch (error) {
-                    console.error('載入資料錯誤:', error);
-                }
-            },
-
-            undo() {
-                alert('撤銷功能開發中');
-            }
+            rules: [],
+            snapshots: [],
+            rows: 6,
+            cols: 5,
+            hideEmpty: false,
+            perspective: 'teacher',
+            className: '3A 班',
+            classDate: new Date().toISOString().split('T')[0]
         };
 
-        // 初始化應用程式
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                app.init();
+        // 初始化日期
+        document.getElementById('classDate').valueAsDate = new Date();
+
+        // 標籤切換
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.tab).classList.add('active');
             });
-        } else {
-            app.init();
+        });
+
+        // 視角監聽
+        document.querySelectorAll('input[name="perspective"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                state.perspective = e.target.value;
+                renderSeating();
+            });
+        });
+
+        // 空位顯示監聽
+        document.querySelectorAll('input[name="emptyDisplay"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                state.hideEmpty = e.target.value === 'hide';
+                renderSeating();
+            });
+        });
+
+        // 匯入學生
+        function importStudents() {
+            const input = document.getElementById('studentInput').value;
+            const lines = input.trim().split('\n');
+            state.students = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(',');
+                if (parts.length === 2) {
+                    state.students.push({
+                        no: parts[0].trim(),
+                        name: parts[1].trim()
+                    });
+                }
+            });
+
+            updateStudentSelectors();
+            updateStudentList();
+            alert(`成功匯入 ${state.students.length} 名學生`);
         }
+
+        // 更新學生列表顯示
+        function updateStudentList() {
+            const tbody = document.getElementById('studentList');
+            tbody.innerHTML = state.students.map((s, idx) => `
+                <tr>
+                    <td>${s.no}</td>
+                    <td>${s.name}</td>
+                    <td><button class="small danger" onclick="removeStudent(${idx})">刪除</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // 移除學生
+        function removeStudent(idx) {
+            state.students.splice(idx, 1);
+            updateStudentList();
+            updateStudentSelectors();
+        }
+
+        // 清空名單
+        function clearStudents() {
+            if (confirm('確定要清空所有學生嗎？')) {
+                state.students = [];
+                state.seating = [];
+                state.rules = [];
+                updateStudentList();
+                updateStudentSelectors();
+                updateRulesList();
+                renderSeating();
+            }
+        }
+
+        // 更新選擇器
+        function updateStudentSelectors() {
+            const options = state.students.map(s => `<option value="${s.no}">${s.name}</option>`).join('');
+            document.getElementById('adjacentStudent1').innerHTML = '<option value="">選擇學生 A</option>' + options;
+            document.getElementById('adjacentStudent2').innerHTML = '<option value="">選擇學生 B</option>' + options;
+            document.getElementById('gridStudent1').innerHTML = '<option value="">選擇學生 A</option>' + options;
+            document.getElementById('gridStudent2').innerHTML = '<option value="">選擇學生 B</option>' + options;
+            document.getElementById('positionStudent').innerHTML = '<option value="">選擇學生</option>' + options;
+            document.getElementById('adjacentPairStudent1').innerHTML = '<option value="">選擇學生 A</option>' + options;
+            document.getElementById('adjacentPairStudent2').innerHTML = '<option value="">選擇學生 B</option>' + options;
+        }
+
+        // 新增相鄰限制
+        function addAdjacentRule() {
+            const s1 = document.getElementById('adjacentStudent1').value;
+            const s2 = document.getElementById('adjacentStudent2').value;
+            
+            if (!s1 || !s2 || s1 === s2) {
+                alert('請選擇兩位不同的學生');
+                return;
+            }
+
+            state.rules.push({
+                type: 'adjacent',
+                student1: s1,
+                student2: s2
+            });
+
+            document.getElementById('adjacentStudent1').value = '';
+            document.getElementById('adjacentStudent2').value = '';
+            updateRulesList();
+        }
+
+        // 新增九宮格限制
+        function addGridRule() {
+            const s1 = document.getElementById('gridStudent1').value;
+            const s2 = document.getElementById('gridStudent2').value;
+            
+            if (!s1 || !s2 || s1 === s2) {
+                alert('請選擇兩位不同的學生');
+                return;
+            }
+
+            state.rules.push({
+                type: 'grid',
+                student1: s1,
+                student2: s2
+            });
+
+            document.getElementById('gridStudent1').value = '';
+            document.getElementById('gridStudent2').value = '';
+            updateRulesList();
+        }
+
+        // 新增位置限制
+        function addPositionRule() {
+            const student = document.getElementById('positionStudent').value;
+            const posType = document.getElementById('positionType').value;
+            
+            if (!student) {
+                alert('請選擇學生');
+                return;
+            }
+
+            if (posType === 'fixed') {
+                const seatInput = document.getElementById('fixedSeatInput').value;
+                if (!seatInput) {
+                    alert('請輸入座位座標');
+                    return;
+                }
+                const [row, col] = seatInput.split(',').map(x => parseInt(x.trim()));
+                if (isNaN(row) || isNaN(col) || row < 1 || row > state.rows || col < 1 || col > state.cols) {
+                    alert(`請輸入有效的座位座標 (行: 1-${state.rows}, 列: 1-${state.cols})`);
+                    return;
+                }
+                state.rules.push({
+                    type: 'position',
+                    subtype: posType,
+                    student: student,
+                    seatRow: row - 1,
+                    seatCol: col - 1
+                });
+            } else {
+                state.rules.push({
+                    type: 'position',
+                    subtype: posType,
+                    student: student
+                });
+            }
+
+            document.getElementById('positionStudent').value = '';
+            document.getElementById('fixedSeatInput').value = '';
+            updateRulesList();
+        }
+
+        // 更新固定座位選擇器顯示
+        function updateFixedSeatSelector() {
+            const selector = document.getElementById('fixedSeatSelector');
+            const posType = document.getElementById('positionType').value;
+            selector.style.display = posType === 'fixed' ? 'block' : 'none';
+        }
+
+        // 新增相鄰對
+        function addAdjacentPair() {
+            const s1 = document.getElementById('adjacentPairStudent1').value;
+            const s2 = document.getElementById('adjacentPairStudent2').value;
+            
+            if (!s1 || !s2 || s1 === s2) {
+                alert('請選擇兩位不同的學生');
+                return;
+            }
+
+            state.rules.push({
+                type: 'adjacentPair',
+                student1: s1,
+                student2: s2
+            });
+
+            document.getElementById('adjacentPairStudent1').value = '';
+            document.getElementById('adjacentPairStudent2').value = '';
+            updateRulesList();
+        }
+
+        // 更新規則列表
+        function updateRulesList() {
+            const rulesList = document.getElementById('rulesList');
+            rulesList.innerHTML = state.rules.map((r, idx) => {
+                let text = '';
+                if (r.type === 'adjacent') {
+                    const n1 = state.students.find(s => s.no === r.student1)?.name || r.student1;
+                    const n2 = state.students.find(s => s.no === r.student2)?.name || r.student2;
+                    text = `❌ ${n1} 和 ${n2} 不相鄰`;
+                } else if (r.type === 'grid') {
+                    const n1 = state.students.find(s => s.no === r.student1)?.name || r.student1;
+                    const n2 = state.students.find(s => s.no === r.student2)?.name || r.student2;
+                    text = `⚠️ ${n1} 和 ${n2} 九宮格外`;
+                } else if (r.type === 'adjacentPair') {
+                    const n1 = state.students.find(s => s.no === r.student1)?.name || r.student1;
+                    const n2 = state.students.find(s => s.no === r.student2)?.name || r.student2;
+                    text = `🤝 ${n1} 和 ${n2} 必須相鄰`;
+                } else if (r.type === 'position') {
+                    const name = state.students.find(s => s.no === r.student)?.name || r.student;
+                    const subtext = r.subtype === 'front' ? '前排 (1-2行)' : r.subtype === 'tall' ? '高大同學 (側邊/第5行)' : '固定座位';
+                    text = `📍 ${name} - ${subtext}`;
+                }
+                return `
+                    <div class="rule-item">
+                        <span class="rule-text">${text}</span>
+                        <button class="small danger" onclick="removeRule(${idx})">刪除</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 移除規則
+        function removeRule(idx) {
+            state.rules.splice(idx, 1);
+            updateRulesList();
+        }
+
+        // 更新教室設定
+        function updateClassroom() {
+            state.rows = parseInt(document.getElementById('rows').value);
+            state.cols = parseInt(document.getElementById('cols').value);
+            state.className = document.getElementById('className').value;
+            state.classDate = document.getElementById('classDate').value;
+            renderSeating();
+        }
+
+        // 產生座位表
+        function generateSeating() {
+            if (state.students.length === 0) {
+                alert('請先輸入學生名單');
+                return;
+            }
+
+            state.rows = parseInt(document.getElementById('rows').value);
+            state.cols = parseInt(document.getElementById('cols').value);
+
+            const totalSeats = state.rows * state.cols;
+            if (state.students.length > totalSeats) {
+                alert(`學生數量 (${state.students.length}) 超過座位數 (${totalSeats})`);
+                return;
+            }
+
+            // 優先級座位安排演算法
+            state.seating = initializeSeating();
+            const unassigned = [...state.students];
+            
+            // 優先 1: 安排前排、高大同學、固定座位
+            const priorityPositions = state.rules.filter(r => r.type === 'position');
+            priorityPositions.forEach(rule => {
+                const student = unassigned.find(s => s.no === rule.student);
+                if (student) {
+                    if (rule.subtype === 'front') {
+                        assignToFrontRow(student);
+                    } else if (rule.subtype === 'tall') {
+                        assignToSideLine(student);
+                    } else if (rule.subtype === 'fixed') {
+                        assignToFixedSeat(student, rule);
+                    }
+                    unassigned.splice(unassigned.indexOf(student), 1);
+                }
+            });
+
+            // 優先 2: 安排必須相鄰的對
+            const adjacentPairs = state.rules.filter(r => r.type === 'adjacentPair');
+            adjacentPairs.forEach(pair => {
+                const s1 = unassigned.find(s => s.no === pair.student1);
+                const s2 = unassigned.find(s => s.no === pair.student2);
+                if (s1 && s2) {
+                    assignAdjacentPair(s1, s2);
+                    unassigned.splice(unassigned.indexOf(s1), 1);
+                    unassigned.splice(unassigned.indexOf(s2), 1);
+                }
+            });
+
+            // 優先 3: 安排其餘學生 - 按排填滿（優先填滿每一排）
+            unassigned.forEach(student => {
+                assignRowByRowSeat(student);
+            });
+
+            // 應用翻轉
+            const flipV = document.getElementById('flipVertical').checked;
+            const flipH = document.getElementById('flipHorizontal').checked;
+            if (flipV || flipH) {
+                applyFlip(flipV, flipH);
+            }
+
+            checkConflicts();
+            renderSeating();
+        }
+
+        // 初始化座位陣列
+        function initializeSeating() {
+            const seating = [];
+            for (let r = 0; r < state.rows; r++) {
+                for (let c = 0; c < state.cols; c++) {
+                    seating.push({
+                        row: r,
+                        col: c,
+                        student: null,
+                        assigned: false
+                    });
+                }
+            }
+            return seating;
+        }
+
+        // 分配必須相鄰的對
+        function assignAdjacentPair(s1, s2) {
+            const emptySeat = getRandomEmptySeat();
+            if (!emptySeat) return;
+
+            // 嘗試找到相鄰的兩個座位
+            const adjacent = getAdjacentSeats(emptySeat);
+            if (adjacent.length > 0) {
+                const secondSeat = adjacent[0];
+                emptySeat.student = s1;
+                emptySeat.assigned = true;
+                secondSeat.student = s2;
+                secondSeat.assigned = true;
+            } else {
+                emptySeat.student = s1;
+                emptySeat.assigned = true;
+                const emptySeat2 = getRandomEmptySeat();
+                if (emptySeat2) {
+                    emptySeat2.student = s2;
+                    emptySeat2.assigned = true;
+                }
+            }
+        }
+
+        // 獲得相鄰座位
+        function getAdjacentSeats(seat) {
+            const adjacent = [];
+            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+            
+            directions.forEach(([dr, dc]) => {
+                const r = seat.row + dr;
+                const c = seat.col + dc;
+                if (r >= 0 && r < state.rows && c >= 0 && c < state.cols) {
+                    const adjacentSeat = state.seating.find(s => s.row === r && s.col === c);
+                    if (adjacentSeat && !adjacentSeat.student) {
+                        adjacent.push(adjacentSeat);
+                    }
+                }
+            });
+            return adjacent;
+        }
+
+        // 分配到前排
+        function assignToFrontRow(student) {
+            const frontRows = [0, 1];
+            const frontSeats = state.seating.filter(s => frontRows.includes(s.row) && !s.student);
+            
+            if (frontSeats.length > 0) {
+                const randomSeat = frontSeats[Math.floor(Math.random() * frontSeats.length)];
+                randomSeat.student = student;
+                randomSeat.assigned = true;
+            } else {
+                assignRandomSeat(student);
+            }
+        }
+
+        // 分配到側邊或第5行
+        function assignToSideLine(student) {
+            const tallSeats = state.seating.filter(s => {
+                const isSide = s.col === 0 || s.col === state.cols - 1;
+                const isRow5 = s.row === 4 && state.rows > 4;
+                return (isSide || isRow5) && !s.student;
+            });
+            
+            if (tallSeats.length > 0) {
+                const randomSeat = tallSeats[Math.floor(Math.random() * tallSeats.length)];
+                randomSeat.student = student;
+                randomSeat.assigned = true;
+            } else {
+                assignRandomSeat(student);
+            }
+        }
+
+        // 分配到固定座位
+        function assignToFixedSeat(student, rule) {
+            if (rule && rule.seatRow !== undefined && rule.seatCol !== undefined) {
+                const seat = state.seating.find(s => s.row === rule.seatRow && s.col === rule.seatCol);
+                if (seat && !seat.student) {
+                    seat.student = student;
+                    seat.assigned = true;
+                    return;
+                }
+            }
+            const emptySeat = getRandomEmptySeat();
+            if (emptySeat) {
+                emptySeat.student = student;
+                emptySeat.assigned = true;
+            }
+        }
+
+        // 按排填滿座位 - 優先填滿完整的排，空位只在最後一排
+        function assignRowByRowSeat(student) {
+            // 從前往後逐排查找
+            for (let r = 0; r < state.rows; r++) {
+                const rowSeats = state.seating.filter(s => s.row === r && !s.student);
+                if (rowSeats.length > 0) {
+                    const randomIdx = Math.floor(Math.random() * rowSeats.length);
+                    rowSeats[randomIdx].student = student;
+                    rowSeats[randomIdx].assigned = true;
+                    return;
+                }
+            }
+        }
+
+        // 隨機分配座位
+        function assignRandomSeat(student) {
+            const emptySeat = getRandomEmptySeat();
+            if (emptySeat) {
+                emptySeat.student = student;
+                emptySeat.assigned = true;
+            }
+        }
+
+        // 取得隨機空座位
+        function getRandomEmptySeat() {
+            const emptySeats = state.seating.filter(s => !s.student);
+            if (emptySeats.length === 0) return null;
+            return emptySeats[Math.floor(Math.random() * emptySeats.length)];
+        }
+
+        // 應用翻轉
+        function applyFlip(flipV, flipH) {
+            const flipStrength = document.getElementById('flipStrength').value;
+            const strength = flipStrength === 'low' ? 0.3 : flipStrength === 'high' ? 0.9 : 0.6;
+            
+            const studentSeats = state.seating.filter(s => s.student);
+            const flippableCount = Math.floor(studentSeats.length * strength);
+            
+            for (let i = 0; i < flippableCount; i++) {
+                const randomIdx1 = Math.floor(Math.random() * studentSeats.length);
+                const randomIdx2 = Math.floor(Math.random() * studentSeats.length);
+                [studentSeats[randomIdx1].student, studentSeats[randomIdx2].student] = 
+                [studentSeats[randomIdx2].student, studentSeats[randomIdx1].student];
+            }
+        }
+
+        // 檢查衝突
+        function checkConflicts() {
+            state.seating.forEach(seat => {
+                seat.conflict = false;
+                seat.warning = '';
+            });
+
+            state.rules.forEach(rule => {
+                // 不能相鄰規則
+                if (rule.type === 'adjacent') {
+                    const seat1 = state.seating.find(s => s.student?.no === rule.student1);
+                    const seat2 = state.seating.find(s => s.student?.no === rule.student2);
+                    
+                    if (seat1 && seat2) {
+                        const dist = Math.abs(seat1.row - seat2.row) + Math.abs(seat1.col - seat2.col);
+                        if (dist === 1) {
+                            seat1.conflict = true;
+                            seat2.conflict = true;
+                            seat1.warning = '不可相鄰';
+                            seat2.warning = '不可相鄰';
+                        }
+                    }
+                }
+
+                // 九宮格限制
+                if (rule.type === 'grid') {
+                    const seat1 = state.seating.find(s => s.student?.no === rule.student1);
+                    const seat2 = state.seating.find(s => s.student?.no === rule.student2);
+                    
+                    if (seat1 && seat2) {
+                        const rowDiff = Math.abs(seat1.row - seat2.row);
+                        const colDiff = Math.abs(seat1.col - seat2.col);
+                        // 九宮格是 3x3 區域，所以距離不超過 2
+                        if (rowDiff <= 1 && colDiff <= 1) {
+                            seat1.conflict = true;
+                            seat2.conflict = true;
+                            seat1.warning = '九宮格衝突';
+                            seat2.warning = '九宮格衝突';
+                        }
+                    }
+                }
+                
+                // 必須相鄰規則
+                if (rule.type === 'adjacentPair') {
+                    const seat1 = state.seating.find(s => s.student?.no === rule.student1);
+                    const seat2 = state.seating.find(s => s.student?.no === rule.student2);
+                    
+                    if (seat1 && seat2) {
+                        const dist = Math.abs(seat1.row - seat2.row) + Math.abs(seat1.col - seat2.col);
+                        if (dist !== 1) {
+                            seat1.conflict = true;
+                            seat2.conflict = true;
+                            seat1.warning = '相鄰對分離';
+                            seat2.warning = '相鄰對分離';
+                        }
+                    }
+                }
+                
+                // 位置限制
+                if (rule.type === 'position') {
+                    const seat = state.seating.find(s => s.student?.no === rule.student);
+                    if (seat) {
+                        if (rule.subtype === 'front' && seat.row > 1) {
+                            seat.conflict = true;
+                            seat.warning = '應在前排';
+                        }
+                        if (rule.subtype === 'tall') {
+                            const isSide = seat.col === 0 || seat.col === state.cols - 1;
+                            const isRow5 = seat.row === 4;
+                            if (!isSide && !isRow5) {
+                                seat.conflict = true;
+                                seat.warning = '應在側邊/第5行';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 自動修正
+        function autoFix() {
+            checkConflicts();
+            const conflictSeats = state.seating.filter(s => s.conflict && s.student);
+            
+            if (conflictSeats.length === 0) {
+                alert('沒有衝突，座位表正常');
+                return;
+            }
+
+            // 簡單交換
+            for (let i = 0; i < conflictSeats.length; i++) {
+                const conflictSeat = conflictSeats[i];
+                const emptySeats = state.seating.filter(s => !s.student);
+                
+                if (emptySeats.length > 0) {
+                    const randomEmpty = emptySeats[Math.floor(Math.random() * emptySeats.length)];
+                    [conflictSeat.student, randomEmpty.student] = [randomEmpty.student, conflictSeat.student];
+                }
+            }
+
+            checkConflicts();
+            renderSeating();
+            alert('自動修正完成');
+        }
+
+        // 渲染座位表
+        function renderSeating() {
+            const container = document.getElementById('classroomGrid');
+            
+            if (state.seating.length === 0) {
+                container.innerHTML = `
+                    <div class="info-box" style="text-align: center;">
+                        請在左側面板中輸入學生名單和設定教室配置，然後點擊「重新產生座位」
+                    </div>
+                `;
+                return;
+            }
+
+            const rows = [];
+            for (let r = 0; r < state.rows; r++) {
+                const displayRow = state.perspective === 'teacher' ? state.rows - 1 - r : r;
+                rows.push(r);
+            }
+
+            let seatingRows = [];
+            for (let r = 0; r < state.rows; r++) {
+                const displayRow = state.perspective === 'teacher' ? state.rows - 1 - r : r;
+                const rowSeats = state.seating.filter(s => s.row === displayRow);
+                
+                const seatHTML = rowSeats.map(seat => {
+                    if (!seat.student && state.hideEmpty) return '';
+                    
+                    let seatClass = 'seat';
+                    if (seat.student) {
+                        seatClass += ' student';
+                        if (seat.conflict) seatClass += ' conflict';
+                    } else {
+                        seatClass += ' empty';
+                    }
+
+                    return `
+                        <div class="${seatClass}" 
+                             draggable="true"
+                             data-row="${seat.row}" 
+                             data-col="${seat.col}"
+                             ondragstart="handleDragStart(event)"
+                             ondragover="handleDragOver(event)"
+                             ondragleave="handleDragLeave(event)"
+                             ondrop="handleDrop(event)"
+                             title="${seat.student ? seat.student.name : '空位'}">
+                            ${seat.student ? `<span class="seat-number">${seat.student.no}</span><span class="seat-name">${seat.student.name}</span>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                if (seatHTML) {
+                    seatingRows.push(`<div class="grid-row">${seatHTML}</div>`);
+                }
+            }
+
+            const conflictCount = state.seating.filter(s => s.conflict).length;
+            const statusHTML = conflictCount > 0 ? 
+                `<div class="error-box">⚠️ 檢測到 ${conflictCount} 個座位違反限制規則</div>` :
+                '<div class="success-box">✓ 所有座位都滿足限制規則</div>';
+
+            const perspectiveLabel = state.perspective === 'teacher' ? '📍 教師視角（講桌在下）' : '👥 學生視角（講桌在上）';
+            const podiumPos = state.perspective === 'teacher' ? 'bottom' : 'top';
+
+            container.innerHTML = `
+                <div class="grid-container">
+                    ${podiumPos === 'bottom' ? '' : `<div class="podium">🎤 講桌</div>`}
+                    ${seatingRows.join('')}
+                    ${podiumPos === 'top' ? '' : `<div class="podium">🎤 講桌</div>`}
+                </div>
+            `;
+
+            document.getElementById('statusContainer').innerHTML = statusHTML;
+        }
+
+        // 保存快照
+        function saveSnapshot() {
+            const name = document.getElementById('snapshotName').value || `快照 ${state.snapshots.length + 1}`;
+            
+            state.snapshots.push({
+                id: Date.now(),
+                name: name,
+                timestamp: new Date().toLocaleString('zh-HK'),
+                seating: JSON.parse(JSON.stringify(state.seating)),
+                students: JSON.parse(JSON.stringify(state.students)),
+                perspective: state.perspective,
+                className: state.className
+            });
+
+            document.getElementById('snapshotName').value = '';
+            updateSnapshotsList();
+            alert(`快照「${name}」已保存`);
+        }
+
+        // 更新快照列表
+        function updateSnapshotsList() {
+            const list = document.getElementById('snapshotsList');
+            list.innerHTML = state.snapshots.map((snap, idx) => `
+                <div class="snapshot-item">
+                    <strong>${snap.name}</strong>
+                    <div style="font-size: 12px; color: var(--color-text-secondary); margin: 4px 0;">
+                        ${snap.timestamp}
+                    </div>
+                    <div style="display: flex; gap: 4px; margin-top: 8px;">
+                        <button class="small" onclick="loadSnapshot(${idx})">載入</button>
+                        <button class="small secondary" onclick="downloadSnapshot(${idx})">下載</button>
+                        <button class="small danger" onclick="deleteSnapshot(${idx})">刪除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 載入快照
+        function loadSnapshot(idx) {
+            const snap = state.snapshots[idx];
+            state.seating = JSON.parse(JSON.stringify(snap.seating));
+            state.students = JSON.parse(JSON.stringify(snap.students));
+            state.perspective = snap.perspective;
+            
+            document.querySelectorAll('input[name="perspective"]').forEach(r => {
+                r.checked = r.value === snap.perspective;
+            });
+
+            updateStudentList();
+            updateStudentSelectors();
+            renderSeating();
+            alert(`已載入快照「${snap.name}」`);
+        }
+
+        // 刪除快照
+        function deleteSnapshot(idx) {
+            if (confirm('確定要刪除此快照嗎？')) {
+                state.snapshots.splice(idx, 1);
+                updateSnapshotsList();
+            }
+        }
+
+        // 下載快照
+        function downloadSnapshot(idx) {
+            const snap = state.snapshots[idx];
+            const data = JSON.stringify(snap, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${snap.name}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 匯出 PNG
+        function exportPNG() {
+            alert('PNG 匯出功能需要額外庫支持。目前建議使用截圖工具');
+        }
+
+        // 匯出 PDF
+        function exportPDF() {
+            alert('PDF 匯出功能需要額外庫支持。目前建議使用瀏覽器的列印功能 (Ctrl+P)');
+        }
+
+        // 拖拉放下功能
+        let draggedSeat = null;
+
+        function handleDragStart(event) {
+            draggedSeat = event.currentTarget;
+            draggedSeat.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            const seat = event.currentTarget;
+            if (seat && seat !== draggedSeat) {
+                seat.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(event) {
+            if (event.currentTarget === event.target) {
+                event.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetSeat = event.currentTarget;
+            if (!targetSeat || !draggedSeat || targetSeat === draggedSeat) {
+                if (draggedSeat) draggedSeat.classList.remove('dragging');
+                targetSeat.classList.remove('drag-over');
+                return;
+            }
+
+            const fromRow = parseInt(draggedSeat.dataset.row);
+            const fromCol = parseInt(draggedSeat.dataset.col);
+            const toRow = parseInt(targetSeat.dataset.row);
+            const toCol = parseInt(targetSeat.dataset.col);
+
+            const fromSeat = state.seating.find(s => s.row === fromRow && s.col === fromCol);
+            const toSeatObj = state.seating.find(s => s.row === toRow && s.col === toCol);
+
+            if (fromSeat && toSeatObj) {
+                [fromSeat.student, toSeatObj.student] = [toSeatObj.student, fromSeat.student];
+                checkConflicts();
+                renderSeating();
+            }
+
+            draggedSeat.classList.remove('dragging');
+            targetSeat.classList.remove('drag-over');
+            draggedSeat = null;
+        }
+
+        // 初始化
+        updateStudentSelectors();
     </script>
 </body>
 </html>
