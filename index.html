@@ -46,7 +46,7 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 380px 1fr;
             gap: 0;
             min-height: 600px;
         }
@@ -124,6 +124,11 @@
 
         .btn-secondary:hover {
             background: #5a6268;
+        }
+
+        .btn-small {
+            padding: 5px 12px;
+            font-size: 0.85em;
         }
 
         input[type="number"], input[type="text"], select {
@@ -283,11 +288,6 @@
             align-items: center;
         }
 
-        .rule-item button {
-            padding: 5px 10px;
-            font-size: 0.85em;
-        }
-
         .student-select {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -296,10 +296,36 @@
             margin: 15px 0;
         }
 
-        .export-section {
+        .student-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .student-item:hover {
+            background: #e9ecef;
+        }
+
+        .student-info {
+            font-weight: 500;
+        }
+
+        .student-number {
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .add-student-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 1fr 2fr auto;
             gap: 10px;
+            align-items: end;
         }
 
         .snapshot-item {
@@ -360,24 +386,9 @@
             color: #155724;
         }
 
-        input[type="file"] {
-            display: none;
-        }
-
-        .file-upload-label {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .file-upload-label:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
+        .student-list-container {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         @media print {
@@ -397,19 +408,28 @@
     <div class="container">
         <div class="header">
             <h1>🎓 教室座位表產生器</h1>
-            <p>智能管理班級座位，輕鬆重排與匯出</p>
+            <p>智能管理班級座位，輕鬆重排與調整</p>
         </div>
 
         <div class="main-content">
             <!-- 側邊欄 -->
             <div class="sidebar">
-                <!-- 名單管理 -->
+                <!-- 學生管理 -->
                 <div class="section">
-                    <h3>📋 名單管理</h3>
-                    <button class="btn btn-secondary" onclick="app.downloadTemplate()">下載範本</button>
-                    <label for="csvFile" class="file-upload-label">📂 匯入 CSV</label>
-                    <input type="file" id="csvFile" accept=".csv" onchange="app.importCSV(event)">
+                    <h3>👥 學生管理</h3>
+                    <div class="add-student-form">
+                        <div>
+                            <label style="margin-top: 0;">座號</label>
+                            <input type="number" id="newSeatNo" placeholder="1" min="1">
+                        </div>
+                        <div>
+                            <label style="margin-top: 0;">姓名</label>
+                            <input type="text" id="newStudentName" placeholder="王小明">
+                        </div>
+                        <button class="btn btn-success" onclick="app.addStudent()" style="margin-top: 28px;">新增</button>
+                    </div>
                     <div id="studentCount" class="info-box hidden"></div>
+                    <div class="student-list-container" id="studentList"></div>
                 </div>
 
                 <!-- 教室設定 -->
@@ -462,17 +482,6 @@
                     <button class="btn btn-danger" onclick="app.autoFixConflicts()" style="width: 100%; margin-top: 10px;">自動修正衝突</button>
                 </div>
 
-                <!-- 匯出 -->
-                <div class="section">
-                    <h3>💾 匯出</h3>
-                    <div class="export-section">
-                        <button class="btn btn-primary" onclick="app.exportPNG()">PNG 圖片</button>
-                        <button class="btn btn-primary" onclick="app.exportPDF()">PDF 文件</button>
-                        <button class="btn btn-secondary" onclick="app.exportCSV()">CSV 資料</button>
-                        <button class="btn btn-secondary" onclick="app.exportJSON()">JSON 備份</button>
-                    </div>
-                </div>
-
                 <!-- 歷史記錄 -->
                 <div class="section">
                     <h3>📚 歷史記錄</h3>
@@ -512,9 +521,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <script>
         const app = {
             students: [],
@@ -535,9 +541,11 @@
             currentRuleType: null,
 
             init() {
+                this.loadFromLocalStorage();
                 this.renderClassroom();
                 this.renderRules();
                 this.renderSnapshots();
+                this.renderStudentList();
                 document.addEventListener('keydown', (e) => {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
                         e.preventDefault();
@@ -546,61 +554,115 @@
                 });
             },
 
-            downloadTemplate() {
-                const csv = '座號,姓名\n1,王小明\n2,李小華\n3,陳小美';
-                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = '學生名單範本.csv';
-                link.click();
+            addStudent() {
+                const seatNo = parseInt(document.getElementById('newSeatNo').value);
+                const name = document.getElementById('newStudentName').value.trim();
+
+                if (!seatNo || seatNo <= 0) {
+                    alert('請輸入有效的座號（正整數）');
+                    return;
+                }
+
+                if (!name) {
+                    alert('請輸入學生姓名');
+                    return;
+                }
+
+                // Check if seat number already exists
+                if (this.students.some(s => s.seatNo === seatNo)) {
+                    alert(`座號 ${seatNo} 已存在，請使用其他座號`);
+                    return;
+                }
+
+                this.students.push({ seatNo, name });
+                this.students.sort((a, b) => a.seatNo - b.seatNo);
+
+                document.getElementById('newSeatNo').value = '';
+                document.getElementById('newStudentName').value = '';
+
+                this.renderStudentList();
+                this.saveToLocalStorage();
+
+                document.getElementById('studentCount').className = 'success-box';
+                document.getElementById('studentCount').textContent = `目前共有 ${this.students.length} 位學生`;
+                document.getElementById('studentCount').classList.remove('hidden');
+
+                // Auto-suggest next seat number
+                const maxSeatNo = Math.max(...this.students.map(s => s.seatNo));
+                document.getElementById('newSeatNo').value = maxSeatNo + 1;
             },
 
-            importCSV(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+            editStudent(seatNo) {
+                const student = this.students.find(s => s.seatNo === seatNo);
+                if (!student) return;
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const text = e.target.result;
-                        const lines = text.split('\n').filter(line => line.trim());
-                        const students = [];
+                const newName = prompt('修改學生姓名：', student.name);
+                if (newName && newName.trim()) {
+                    student.name = newName.trim();
+                    this.renderStudentList();
+                    this.renderClassroom();
+                    this.saveToLocalStorage();
+                }
+            },
 
-                        for (let i = 1; i < lines.length; i++) {
-                            const parts = lines[i].split(',');
-                            if (parts.length >= 2) {
-                                const seatNo = parseInt(parts[0].trim());
-                                const name = parts[1].trim();
+            deleteStudent(seatNo) {
+                if (!confirm('確定要刪除此學生嗎？')) return;
 
-                                if (isNaN(seatNo) || seatNo <= 0) {
-                                    throw new Error(`第 ${i + 1} 行：座號必須為正整數`);
-                                }
-                                if (!name) {
-                                    throw new Error(`第 ${i + 1} 行：姓名不能為空`);
-                                }
+                this.students = this.students.filter(s => s.seatNo !== seatNo);
 
-                                students.push({ seatNo, name });
-                            }
+                // Remove from seating
+                for (let r = 0; r < this.seating.length; r++) {
+                    for (let c = 0; c < this.seating[r].length; c++) {
+                        if (this.seating[r][c]?.seatNo === seatNo) {
+                            this.seating[r][c] = null;
                         }
-
-                        // Check for duplicate seat numbers
-                        const seatNos = students.map(s => s.seatNo);
-                        const duplicates = seatNos.filter((item, index) => seatNos.indexOf(item) !== index);
-                        if (duplicates.length > 0) {
-                            throw new Error(`座號重複：${duplicates.join(', ')}`);
-                        }
-
-                        this.students = students;
-                        document.getElementById('studentCount').className = 'success-box';
-                        document.getElementById('studentCount').textContent = `成功匯入 ${students.length} 位學生`;
-                        this.generateSeating();
-                    } catch (error) {
-                        document.getElementById('studentCount').className = 'error-box';
-                        document.getElementById('studentCount').textContent = `匯入失敗：${error.message}`;
                     }
-                    document.getElementById('studentCount').classList.remove('hidden');
-                };
-                reader.readAsText(file, 'UTF-8');
+                }
+
+                // Remove related rules
+                this.rules.adjacent = this.rules.adjacent.filter(rule => 
+                    rule.student1 !== seatNo && rule.student2 !== seatNo
+                );
+                this.rules.ninegrid = this.rules.ninegrid.filter(rule => 
+                    rule.student1 !== seatNo && rule.student2 !== seatNo
+                );
+                this.rules.fixed = this.rules.fixed.filter(rule => rule.seatNo !== seatNo);
+
+                this.renderStudentList();
+                this.renderClassroom();
+                this.renderRules();
+                this.saveToLocalStorage();
+
+                document.getElementById('studentCount').className = 'info-box';
+                document.getElementById('studentCount').textContent = `目前共有 ${this.students.length} 位學生`;
+                document.getElementById('studentCount').classList.remove('hidden');
+            },
+
+            renderStudentList() {
+                const container = document.getElementById('studentList');
+
+                if (this.students.length === 0) {
+                    container.innerHTML = '<p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">尚未新增學生</p>';
+                    return;
+                }
+
+                let html = '';
+                this.students.forEach(student => {
+                    html += `
+                        <div class="student-item">
+                            <div class="student-info">
+                                <span class="student-number">${student.seatNo}</span>
+                                <span>${student.name}</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary btn-small" onclick="app.editStudent(${student.seatNo})">編輯</button>
+                                <button class="btn btn-danger btn-small" onclick="app.deleteStudent(${student.seatNo})">刪除</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
             },
 
             updateConfig() {
@@ -608,11 +670,12 @@
                 this.config.cols = parseInt(document.getElementById('cols').value);
                 this.config.emptySeats = document.getElementById('emptySeats').value;
                 this.renderClassroom();
+                this.saveToLocalStorage();
             },
 
             generateSeating() {
                 if (this.students.length === 0) {
-                    alert('請先匯入學生名單');
+                    alert('請先新增學生');
                     return;
                 }
 
@@ -622,15 +685,12 @@
                     return;
                 }
 
-                // Start with students list
                 let availableStudents = [...this.students];
 
-                // Initialize seating array
                 this.seating = Array(this.config.rows).fill(null).map(() => 
                     Array(this.config.cols).fill(null)
                 );
 
-                // Place fixed students first
                 this.rules.fixed.forEach(rule => {
                     const student = this.students.find(s => s.seatNo === rule.seatNo);
                     if (student) {
@@ -639,14 +699,11 @@
                     }
                 });
 
-                // Apply flipping logic
                 const flipV = parseInt(document.getElementById('flipVertical').value) / 100;
                 const flipH = parseInt(document.getElementById('flipHorizontal').value) / 100;
 
-                // Shuffle available students
                 availableStudents = this.shuffleWithFlip(availableStudents, flipV, flipH);
 
-                // Fill remaining seats
                 let studentIndex = 0;
                 for (let r = 0; r < this.config.rows; r++) {
                     for (let c = 0; c < this.config.cols; c++) {
@@ -659,24 +716,21 @@
 
                 this.renderClassroom();
                 this.checkConflicts();
+                this.saveToLocalStorage();
             },
 
             shuffleWithFlip(array, flipV, flipH) {
                 const shuffled = [...array];
 
-                // Apply vertical flip probability
                 if (Math.random() < flipV) {
                     shuffled.reverse();
                 }
 
-                // Shuffle with horizontal bias
                 for (let i = shuffled.length - 1; i > 0; i--) {
                     let j;
                     if (Math.random() < flipH) {
-                        // Bias towards opposite end
                         j = Math.floor(Math.random() * i / 2);
                     } else {
-                        // Normal random
                         j = Math.floor(Math.random() * (i + 1));
                     }
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -693,7 +747,6 @@
 
                 let html = '';
 
-                // Podium position based on view
                 if (this.config.view === 'student') {
                     html += '<div class="podium">📚 講桌 📚</div>';
                 }
@@ -740,7 +793,6 @@
 
                 html += '</div>';
 
-                // Podium at bottom for teacher view
                 if (this.config.view === 'teacher') {
                     html += '<div class="podium podium-bottom">📚 講桌 📚</div>';
                 }
@@ -771,13 +823,13 @@
                 if (this.draggedData) {
                     const { row: fromRow, col: fromCol } = this.draggedData;
 
-                    // Swap seats
                     const temp = this.seating[fromRow][fromCol];
                     this.seating[fromRow][fromCol] = this.seating[targetRow][targetCol];
                     this.seating[targetRow][targetCol] = temp;
 
                     this.renderClassroom();
                     this.checkConflicts();
+                    this.saveToLocalStorage();
                 }
             },
 
@@ -791,14 +843,12 @@
             },
 
             checkConflicts() {
-                // Remove all conflict classes first
                 document.querySelectorAll('.seat.conflict').forEach(el => {
                     el.classList.remove('conflict');
                 });
 
                 let hasConflict = false;
 
-                // Check adjacent rules
                 this.rules.adjacent.forEach(rule => {
                     const pos1 = this.findStudentPosition(rule.student1);
                     const pos2 = this.findStudentPosition(rule.student2);
@@ -810,7 +860,6 @@
                     }
                 });
 
-                // Check ninegrid rules
                 this.rules.ninegrid.forEach(rule => {
                     const pos1 = this.findStudentPosition(rule.student1);
                     const pos2 = this.findStudentPosition(rule.student2);
@@ -864,7 +913,6 @@
                 while (attempts < maxAttempts) {
                     let hasConflict = false;
 
-                    // Check and fix adjacent conflicts
                     for (const rule of this.rules.adjacent) {
                         const pos1 = this.findStudentPosition(rule.student1);
                         const pos2 = this.findStudentPosition(rule.student2);
@@ -875,7 +923,6 @@
                         }
                     }
 
-                    // Check and fix ninegrid conflicts
                     for (const rule of this.rules.ninegrid) {
                         const pos1 = this.findStudentPosition(rule.student1);
                         const pos2 = this.findStudentPosition(rule.student2);
@@ -892,6 +939,7 @@
 
                 this.renderClassroom();
                 this.checkConflicts();
+                this.saveToLocalStorage();
 
                 if (attempts >= maxAttempts) {
                     alert('無法自動修正所有衝突，請手動調整');
@@ -901,7 +949,6 @@
             },
 
             swapWithRandom(pos) {
-                // Find random non-fixed seat
                 const available = [];
                 for (let r = 0; r < this.config.rows; r++) {
                     for (let c = 0; c < this.config.cols; c++) {
@@ -920,6 +967,11 @@
             },
 
             showAddRule(type) {
+                if (this.students.length === 0) {
+                    alert('請先新增學生');
+                    return;
+                }
+
                 this.currentRuleType = type;
                 const dialog = document.getElementById('ruleDialog');
                 const title = document.getElementById('dialogTitle');
@@ -980,6 +1032,7 @@
 
                 this.renderRules();
                 this.closeDialog();
+                this.saveToLocalStorage();
             },
 
             renderRules() {
@@ -992,7 +1045,7 @@
                     html += `
                         <div class="rule-item">
                             <span>🚫 相鄰：${s1?.name} ↔ ${s2?.name}</span>
-                            <button class="btn btn-danger" onclick="app.removeRule('adjacent', ${index})">刪除</button>
+                            <button class="btn btn-danger btn-small" onclick="app.removeRule('adjacent', ${index})">刪除</button>
                         </div>
                     `;
                 });
@@ -1003,7 +1056,7 @@
                     html += `
                         <div class="rule-item">
                             <span>⬛ 九宮格：${s1?.name} ↔ ${s2?.name}</span>
-                            <button class="btn btn-danger" onclick="app.removeRule('ninegrid', ${index})">刪除</button>
+                            <button class="btn btn-danger btn-small" onclick="app.removeRule('ninegrid', ${index})">刪除</button>
                         </div>
                     `;
                 });
@@ -1013,7 +1066,7 @@
                     html += `
                         <div class="rule-item">
                             <span>🔒 固定：${s?.name} → 第${rule.row + 1}排${rule.col + 1}列</span>
-                            <button class="btn btn-danger" onclick="app.removeRule('fixed', ${index})">刪除</button>
+                            <button class="btn btn-danger btn-small" onclick="app.removeRule('fixed', ${index})">刪除</button>
                         </div>
                     `;
                 });
@@ -1024,6 +1077,7 @@
             removeRule(type, index) {
                 this.rules[type].splice(index, 1);
                 this.renderRules();
+                this.saveToLocalStorage();
             },
 
             setView(view) {
@@ -1031,78 +1085,15 @@
                 document.getElementById('currentView').textContent = 
                     view === 'teacher' ? '當前：教師視角' : '當前：學生視角';
                 this.renderClassroom();
-            },
-
-            exportPNG() {
-                const classroom = document.getElementById('classroom');
-                html2canvas(classroom, {
-                    scale: 2,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `座位表_${new Date().toLocaleDateString()}.png`;
-                    link.href = canvas.toDataURL();
-                    link.click();
-                });
-            },
-
-            exportPDF() {
-                const classroom = document.getElementById('classroom');
-                html2canvas(classroom, {
-                    scale: 2,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jspdf.jsPDF({
-                        orientation: 'landscape',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-
-                    const imgWidth = 277;
-                    const imgHeight = canvas.height * imgWidth / canvas.width;
-
-                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-                    pdf.save(`座位表_${new Date().toLocaleDateString()}.pdf`);
-                });
-            },
-
-            exportCSV() {
-                let csv = '排數,列數,座號,姓名\n';
-
-                for (let r = 0; r < this.config.rows; r++) {
-                    for (let c = 0; c < this.config.cols; c++) {
-                        const student = this.seating[r][c];
-                        if (student) {
-                            csv += `${r + 1},${c + 1},${student.seatNo},${student.name}\n`;
-                        }
-                    }
-                }
-
-                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `座位表_${new Date().toLocaleDateString()}.csv`;
-                link.click();
-            },
-
-            exportJSON() {
-                const data = {
-                    students: this.students,
-                    seating: this.seating,
-                    rules: this.rules,
-                    config: this.config,
-                    exportDate: new Date().toISOString()
-                };
-
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `座位表備份_${new Date().toLocaleDateString()}.json`;
-                link.click();
+                this.saveToLocalStorage();
             },
 
             saveSnapshot() {
+                if (this.students.length === 0) {
+                    alert('請先新增學生');
+                    return;
+                }
+
                 const name = document.getElementById('snapshotName').value || `快照 ${new Date().toLocaleString()}`;
                 const snapshots = JSON.parse(localStorage.getItem('seatingSnapshots') || '[]');
 
@@ -1140,8 +1131,8 @@
                             <div class="snapshot-name">${snapshot.name}</div>
                             <div class="snapshot-date">${new Date(snapshot.date).toLocaleString()}</div>
                             <div class="snapshot-actions">
-                                <button class="btn btn-primary" style="font-size: 0.85em;" onclick="app.loadSnapshot(${snapshot.id})">載入</button>
-                                <button class="btn btn-danger" style="font-size: 0.85em;" onclick="app.deleteSnapshot(${snapshot.id})">刪除</button>
+                                <button class="btn btn-primary btn-small" onclick="app.loadSnapshot(${snapshot.id})">載入</button>
+                                <button class="btn btn-danger btn-small" onclick="app.deleteSnapshot(${snapshot.id})">刪除</button>
                             </div>
                         </div>
                     `;
@@ -1166,6 +1157,8 @@
 
                     this.renderClassroom();
                     this.renderRules();
+                    this.renderStudentList();
+                    this.saveToLocalStorage();
                     alert('快照已載入！');
                 }
             },
@@ -1179,13 +1172,49 @@
                 this.renderSnapshots();
             },
 
+            saveToLocalStorage() {
+                const data = {
+                    students: this.students,
+                    seating: this.seating,
+                    rules: this.rules,
+                    config: this.config
+                };
+                localStorage.setItem('currentSeating', JSON.stringify(data));
+            },
+
+            loadFromLocalStorage() {
+                const saved = localStorage.getItem('currentSeating');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        this.students = data.students || [];
+                        this.seating = data.seating || [];
+                        this.rules = data.rules || { adjacent: [], ninegrid: [], fixed: [] };
+                        this.config = data.config || this.config;
+
+                        document.getElementById('rows').value = this.config.rows;
+                        document.getElementById('cols').value = this.config.cols;
+                        document.getElementById('emptySeats').value = this.config.emptySeats;
+
+                        if (this.students.length > 0) {
+                            const maxSeatNo = Math.max(...this.students.map(s => s.seatNo));
+                            document.getElementById('newSeatNo').value = maxSeatNo + 1;
+
+                            document.getElementById('studentCount').className = 'info-box';
+                            document.getElementById('studentCount').textContent = `目前共有 ${this.students.length} 位學生`;
+                            document.getElementById('studentCount').classList.remove('hidden');
+                        }
+                    } catch (e) {
+                        console.error('載入資料失敗', e);
+                    }
+                }
+            },
+
             undo() {
-                // Simple undo implementation
                 alert('撤銷功能開發中');
             }
         };
 
-        // Initialize app when page loads
         window.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
